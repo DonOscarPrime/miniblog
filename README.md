@@ -75,3 +75,42 @@ revisión; después entra como `docente.demo` (o como administrador), revísala 
 
 > **Importante:** borra estos usuarios (en `/admin/users/`, como administrador) o cambia su contraseña
 > antes de publicar el blog en internet. Contraseñas conocidas en un servidor público son un riesgo.
+
+## Cómo he desplegado el proyecto
+
+Despliegue en local sobre una máquina virtual Debian 13 en VirtualBox.
+
+### 1. Preparar el entorno
+
+```bash
+sudo apt update
+sudo apt install git openssh-client php-cli php-sqlite3 php-xml php-mbstring php-intl php-curl unzip composer
+ssh-keygen -t ed25519 -C "correo@ejemplo.org"
+ssh -T git@github.com
+```
+
+### 2. Fork, clonado y sincronización
+
+```bash
+git clone git@github.com:DonOscarPrime/miniblog.git
+cd miniblog
+git remote add upstream https://github.com/mpgprofe/miniblog.git
+git fetch upstream
+git merge upstream/master
+```
+
+### 3. Instalación y arranque
+
+```bash
+composer install
+php bin/console create-schema
+php bin/console app:create-user admin "Administrador"
+php -S localhost:8000 -t public
+```
+
+### Problemas encontrados
+
+- **La VM no resolvía github.com.** Con el adaptador puente fallaba el DNS. Lo solucioné cambiando la red de VirtualBox a NAT, con un reenvío de puertos (2222 → 22) para seguir entrando por SSH desde Windows.
+- **GitHub rechazaba la clave SSH** ("Key is invalid"). Al copiarla a mano se alteraba algún carácter. La copié directamente desde PowerShell con `ssh ... "cat ~/.ssh/id_ed25519.pub" | Set-Clipboard`.
+- **El pull request apuntaba al repositorio del profesor.** Tuve que cambiar *base repository* a mi fork.
+- **Ver la aplicación desde Windows.** Con NAT, abrí un túnel SSH (`ssh -p 2222 -L 8000:localhost:8000 ...`) para usar `http://localhost:8000` en el navegador.
